@@ -1,12 +1,10 @@
 const knex = require("./../database");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken"); // Certifique-se de que o jwt está importado
-
-// A chave secreta deve ser a mesma usada para gerar o token
+const jwt = require("jsonwebtoken");
 const SECRET_KEY = 'ndskvbjksdvnlkjsdbvljk'; 
 
 module.exports = {
-    // 🔹 Função de Cadastro (create) - CORRIGIDA
+    // Função de Cadastro
     async create(req, res) {
         try {
             const { nome, email, password } = req.body;
@@ -36,11 +34,11 @@ module.exports = {
             // 3. Geração do Token JWT
             const token = jwt.sign(
                 {
-                    idUser: den_cod, // AQUI DEVE SER O NÚMERO INTEIRO
+                    idUser: den_cod,
                     nome: nome,
                     email: email,
                 },
-                SECRET_KEY, // Sua chave secreta
+                SECRET_KEY,
                 { expiresIn: '1h' }
             );
 
@@ -64,7 +62,7 @@ module.exports = {
         }
     },
 
-    // 🔹 Função de Login (authenticate) - searchUsers
+    // Função de Login (authenticate) - searchUsers
     async searchUsers(req, res) {
         try {
             const { email, password } = req.body;
@@ -109,7 +107,7 @@ module.exports = {
         }
     },
 
-    // 🔹 Listar todos os denunciantes (searchUsersAll)
+    // Listar todos os denunciantes (searchUsersAll)
     async searchUsersAll(req, res) {
         try {
             const denunciantes = await knex("denunciante").select("*");
@@ -120,7 +118,7 @@ module.exports = {
         }
     },
 
-    // 🔹 Buscar por email (getByEmail)
+    // Buscar por email (getByEmail)
     async getByEmail(req, res) {
         try {
             const { email } = req.params;
@@ -139,7 +137,7 @@ module.exports = {
         }
     },
 
-    // 🔹 Função para listar denúncias de um usuário específico (Denunciante)
+    // Função para listar denúncias realizadas pelo denunciante
     async listDenuncias(req, res) {
         try {
             const userId = req.userId; 
@@ -202,6 +200,7 @@ module.exports = {
         }
     },
 
+    // Função de deletar a conta do denunciante
     async deleteAccount(req, res) {
         try {
             const userId = req.userId;
@@ -210,6 +209,8 @@ module.exports = {
                 return res.status(401).json({ erro: "Usuário não autenticado." });
             }
 
+            await knex("denuncia").where("den_cod", userId).del();
+
             const deletedRows = await knex("denunciante")
                 .where("den_cod", userId)
                 .del();
@@ -217,10 +218,14 @@ module.exports = {
             if (deletedRows === 0) {
                 return res.status(404).json({ erro: "Denunciante não encontrado para exclusão." });
             }
+
             return res.status(200).json({ mensagem: "Conta deletada com sucesso." });
 
         } catch (error) {
             console.error("Erro ao deletar conta:", error);
+            if (error.code === '23503') {
+                return res.status(400).json({ erro: "Não foi possível deletar a conta. Existem denúncias associadas que precisam ser removidas primeiro." });
+            }
             return res.status(500).json({ erro: "Erro interno do servidor ao deletar conta." });
         }
     },
