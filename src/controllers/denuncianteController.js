@@ -160,4 +160,68 @@ module.exports = {
             return res.status(500).json({ erro: "Erro interno do servidor ao buscar denúncias." });
         }
     },
+
+
+    async updateProfile(req, res) {
+        try {
+            const userId = req.userId;
+            const { nome, email, password } = req.body;
+
+            if (!userId) {
+                return res.status(401).json({ erro: "Usuário não autenticado." });
+            }
+
+            const updateData = {};
+            if (nome) updateData.den_nome = nome;
+            if (email) updateData.den_email = email;
+            
+            if (password) {
+                updateData.den_senha = await bcrypt.hash(password, 10);
+            }
+
+            if (Object.keys(updateData).length === 0) {
+                return res.status(400).json({ erro: "Nenhum dado para atualizar foi fornecido." });
+            }
+
+            const updatedRows = await knex("denunciante")
+                .where("den_cod", userId)
+                .update(updateData);
+
+            if (updatedRows === 0) {
+                return res.status(404).json({ erro: "Denunciante não encontrado para atualização." });
+            }
+
+            return res.status(200).json({ mensagem: "Perfil atualizado com sucesso!" });
+
+        } catch (error) {
+            console.error("Erro ao atualizar perfil:", error);
+            if (error.message.includes("den_email_unique") || error.code === '23505') { 
+                return res.status(400).json({ erro: "Este e-mail já está cadastrado." });
+            }
+            return res.status(500).json({ erro: "Erro interno do servidor ao atualizar perfil." });
+        }
+    },
+
+    async deleteAccount(req, res) {
+        try {
+            const userId = req.userId;
+
+            if (!userId) {
+                return res.status(401).json({ erro: "Usuário não autenticado." });
+            }
+
+            const deletedRows = await knex("denunciante")
+                .where("den_cod", userId)
+                .del();
+
+            if (deletedRows === 0) {
+                return res.status(404).json({ erro: "Denunciante não encontrado para exclusão." });
+            }
+            return res.status(200).json({ mensagem: "Conta deletada com sucesso." });
+
+        } catch (error) {
+            console.error("Erro ao deletar conta:", error);
+            return res.status(500).json({ erro: "Erro interno do servidor ao deletar conta." });
+        }
+    },
 };
