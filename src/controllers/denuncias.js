@@ -2,12 +2,10 @@ const knex = require("./../database");
 const bcrypt = require("bcrypt");
 
 module.exports = {
-  // 🔹 Criar uma nova denúncia
+  // Criar uma nova denúncia
   async createDenuncia(req, res) {
     try {
-      // O ID do usuário vem do middleware de autenticação
       const idUser = req.userId; 
-
       // Se o middleware falhar, idUser será undefined/null
       if (!idUser) {
         return res.status(401).json({
@@ -27,7 +25,6 @@ module.exports = {
         denun_midia_url,
       } = req.body;
 
-      // 🔸 Validação de campos obrigatórios
       if (
         !denun_local ||
         !denun_hora ||
@@ -42,10 +39,10 @@ module.exports = {
         });
       }
 
-      // 🔸 Inserção no banco
+      // Inserção no banco
       const result = await knex("denuncia")
         .insert({
-          den_cod: idUser, // FK para o denunciante
+          den_cod: idUser,
           denun_local,
           denun_hora,
           denun_data,
@@ -88,7 +85,7 @@ module.exports = {
     }
   },
 
-  // 🔹 Listar denúncias do usuário logado
+  // Listar denúncias do usuário logado
   async listDenuncias(req, res) {
     try {
       const idUser = req.userId;

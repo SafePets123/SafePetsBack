@@ -13,17 +13,15 @@ module.exports = {
                 return res.status(400).json({ erro: "Preencha todos os campos obrigatórios." });
             }
 
-            // 1. Hash da senha
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            // 2. Inserção no banco e obtenção do ID
+            // Inserção no banco e captura do ID
             const [den_cod_result] = await knex("denunciante").insert({
                 den_nome: nome,
                 den_email: email,
                 den_senha: hashedPassword,
             }).returning('den_cod');
 
-            // Garante que den_cod seja o valor numérico
             let den_cod;
             if (typeof den_cod_result === 'object' && den_cod_result !== null && den_cod_result.den_cod) {
                 den_cod = den_cod_result.den_cod;
@@ -31,7 +29,7 @@ module.exports = {
                 den_cod = den_cod_result;
             }
 
-            // 3. Geração do Token JWT
+            // Geração do Token JWT
             const token = jwt.sign(
                 {
                     idUser: den_cod,
@@ -42,7 +40,7 @@ module.exports = {
                 { expiresIn: '1h' }
             );
 
-            // 4. Retorno com o token e os dados do usuário
+            // Retorno com o token e os dados do usuário
             return res.status(201).json({
                 mensagem: "Cadastro realizado com sucesso!",
                 token: token,
@@ -62,7 +60,7 @@ module.exports = {
         }
     },
 
-    // Função de Login (authenticate) - searchUsers
+    // Função de Login
     async searchUsers(req, res) {
         try {
             const { email, password } = req.body;
@@ -84,7 +82,7 @@ module.exports = {
             // Geração do Token JWT
             const token = jwt.sign(
                 {
-                    idUser: usuario.den_cod, // AQUI DEVE SER O NÚMERO INTEIRO
+                    idUser: usuario.den_cod,
                     nome: usuario.den_nome,
                     email: usuario.den_email,
                 },
@@ -159,7 +157,7 @@ module.exports = {
         }
     },
 
-
+    //Função de atualizar informações do cadastro
     async updateProfile(req, res) {
         try {
             const userId = req.userId;
@@ -200,7 +198,7 @@ module.exports = {
         }
     },
 
-    // Função de deletar a conta do denunciante
+    // Função de deletar a conta
     async deleteAccount(req, res) {
         try {
             const userId = req.userId;

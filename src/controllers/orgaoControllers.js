@@ -150,11 +150,9 @@ module.exports = {
     }
   },
 
-  // 🔹 Função para listar TODAS as denúncias (Autoridades)
+  // Função para listar TODAS as denúncias (Autoridades)
   async listAllDenuncias(req, res) {
     try {
-        // Apenas verifica se o usuário está autenticado (pelo middleware)
-        // Não há filtro por userId
         const denuncias = await knex("denuncia")
             .select("*") 
             .orderBy("denun_data", "desc"); 
